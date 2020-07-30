@@ -1,0 +1,108 @@
+#!/bin/bash
+
+export TS=$(date '+%Y%m%d%H%M%S')
+
+
+export T1=$(stat /moodle/conf/etc.nginx.nginx.conf | grep Modify)
+export T2=$(stat /etc/nginx/nginx.conf | grep Modify)
+
+export F1=0
+export F2=0
+
+export T3=$(stat /moodle/conf/etc.security.limits.conf | grep Modify)
+export T4=$(stat /etc/security/limits.conf | grep Modify)
+
+export T5=$(stat /moodle/conf/etc.nginx.sites-enabled.lb-3o3b45.southeastasia.cloudapp.azure.com | grep Modify)
+export T6=$(stat /etc/nginx/sites-enabled/lb-3o3b45.southeastasia.cloudapp.azure.com | grep Modify)
+
+
+
+
+echo $T1
+echo $T2
+echo $T3
+echo $T4
+echo $t5
+echo $T6
+
+#copy nginx config 
+
+if [ "$T1" != "$T2" ]; then
+    #backup config
+    echo "copying nginx configuration "
+    sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.$TS
+    #copy updated configuration
+    sudo cp -p /moodle/conf/etc.nginx.nginx.conf /etc/nginx/nginx.conf
+    export F1=1
+    echo "copying nginx configuration Done"
+fi
+
+#copy limits config 
+if [ "$T3" != "$T4" ]; then
+    #backup config
+    echo "copying limits configuration "
+    sudo mv /etc/security/limits.conf /etc/security/limits.conf.$TS
+    #copy updated configuration
+    sudo cp -p /moodle/conf/etc.security.limits.conf /etc/security/limits.conf
+    export F1=1
+    echo "copying limits configuration Done"
+fi
+
+
+
+#copy limits config
+if [ "$T5" != "$T6" ]; then
+   #backup config
+   echo "copying sites eneabled configuration "
+   sudo mv /etc/nginx/sites-enabled/lb-3o3b45.southeastasia.cloudapp.azure.com /home/azureadmin/conf/sites-enabled.$TS
+   #copy updated configuration
+   sudo rm /etc/nginx/sites-enabled/*
+   sudo cp -p /moodle/conf/etc.nginx.sites-enabled.lb-3o3b45.southeastasia.cloudapp.azure.com /etc/nginx/sites-enabled/lb-3o3b45.southeastasia.cloudapp.azure.com
+   export F1=1 
+   echo "copying sites enabled configuration Done"
+fi
+
+
+
+
+
+if [ "$F1" != "0" ]; then
+    #restart nginx
+    echo "restarting nginx "
+    sudo systemctl restart nginx.service
+    echo "restart request sent"
+fi
+
+
+
+#copy log rotate fikes 
+
+
+export L1=0
+export T7=$(stat /moodle/conf/var.logs.conf | grep Modify)
+
+file=/etc/logrotate.d/var.logs.conf
+if [ ! -e "$file" ]; then
+    echo "Copying Logrotate config"
+    sudo cp -p /moodle/conf/var.logs.conf /etc/logrotate.d/
+    echo "Logrotate config Copy done"
+    export L1=1
+else     :
+    echo "check if logrotate config is updated"
+    export T8=$(stat /etc/logrotate.d/var.logs.conf | grep Modify)
+    if [ "$T7" != "$T8" ]; then
+           echo "Copying Logrotate config"
+           sudo cp -p /moodle/conf/var.logs.conf /etc/logrotate.d/
+           echo "Logrotate config Copy done"
+           export L1=1
+    fi
+fi
+
+if [ "$L1" != "0" ]; then
+    #restart nginx
+    echo "run log rotate"
+    sudo logrotate /etc/logrotate.d/var.logs.conf --state /var/log/logsrotate-state --verbose --force
+    echo "run log rotate complete"
+fi
+
+

@@ -1,0 +1,10 @@
+/var/log/sitelogs/moodle/*.log {
+    daily
+    missingok
+    rotate 10
+    compress
+    create
+}
+
+logrotate /etc/logrotate.d/moodlesitelog.conf --state /var/log/sitelogs/moodle/logrotate-state --verbose --force
+
