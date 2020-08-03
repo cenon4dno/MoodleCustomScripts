@@ -60,7 +60,6 @@ function get_setup_params_from_configs_json
     export nfsHaLbIP=$(echo $json | jq -r .fileServerProfile.nfsHaLbIP)
     export nfsHaExportPath=$(echo $json | jq -r .fileServerProfile.nfsHaExportPath)
     export nfsByoIpExportPath=$(echo $json | jq -r .fileServerProfile.nfsByoIpExportPath)
-    export storageAccountType=$(echo $json | jq -r .moodleProfile.storageAccountType)
     export fileServerDiskSize=$(echo $json | jq -r .fileServerProfile.fileServerDiskSize)
 }
 
